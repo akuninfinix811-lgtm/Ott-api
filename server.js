@@ -15,25 +15,18 @@ function parseM3U(m3uContent) {
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    
-    // Ambil Nama Channel
     if (line.startsWith('#EXTINF:')) {
       const nameMatch = line.match(/,(.+)$/);
       if (nameMatch) currentName = nameMatch[1].trim();
-    } 
-    // Ambil DRM Clearkey jika ada (Format OTT Navigator / TiviMate)
-    else if (line.includes('KODEX') || line.includes('license_key') || line.includes('clearkey')) {
+    } else if (line.includes('KODEX') || line.includes('clearkey')) {
       try {
-        // Contoh parsing keyid:key
         const keyMatch = line.match(/([a-f0-9]{32}):([a-f0-9]{32})/i);
         if (keyMatch) {
           currentKey = {};
           currentKey[keyMatch[1]] = keyMatch[2];
         }
       } catch (e) {}
-    } 
-    // Ambil Link Stream (M3U8 / MPD)
-    else if (line.startsWith('http://') || line.startsWith('https://')) {
+    } else if (line.startsWith('http://') || line.startsWith('https://')) {
       if (currentName) {
         channels.push({
           id: String(channels.length + 1),
@@ -52,34 +45,53 @@ function parseM3U(m3uContent) {
 app.get('/api/channels', async (req, res) => {
   try {
     const response = await axios.get(PLAYLIST_URL, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' },
+      headers: { 'User-Agent': 'Mozilla/5.0' },
       timeout: 10000
     });
     const channels = parseM3U(response.data);
     res.json({ status: 'success', total: channels.length, data: channels });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Gagal mengambil playlist' });
+    res.status(500).json({ status: 'error' });
   }
 });
 
-app.get('/api/proxy', async (req, res) => {
-  const targetUrl = req.query.url;
-  if (!targetUrl) return res.status(400).send('URL required');
+// Halaman khusus Player MPD/HLS
+app.get('/player', (req, res) => {
+  const url = req.query.url;
+  const key = req.query.key; // Format JSON Key jika ada
 
-  try {
-    const response = await axios.get(targetUrl, {
-      responseType: 'stream',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-        'Referer': targetUrl
-      },
-      timeout: 10000
-    });
-    res.set(response.headers);
-    response.data.pipe(res);
-  } catch (error) {
-    res.status(500).send('Error proxying media');
-  }
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body, html { margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; }
+        video { width:100%; height:100%; object-fit:contain; }
+      </style>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+    </head>
+    <body>
+      <video id="video" controls autoplay></video>
+      <script>
+        async function init() {
+          shaka.polyfill.installAll();
+          const video = document.getElementById('video');
+          const player = new shaka.Player(video);
+
+          ${key ? `player.configure({ drm: { clearKeys: ${key} } });` : ''}
+
+          try {
+            await player.load('${url}');
+          } catch(e) {
+            console.error('Error load stream', e);
+          }
+        }
+        document.addEventListener('DOMContentLoaded', init);
+      </script>
+    </body>
+    </html>
+  `);
 });
 
 module.exports = app;
