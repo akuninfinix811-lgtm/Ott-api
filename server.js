@@ -22,14 +22,14 @@ function parseM3U(m3uContent) {
       if (nameMatch) currentName = nameMatch[1].trim();
     } 
 
-    // 2. Ambil ClearKey (Hanya mencari pasangan 32-hex : 32-hex)
-    if (line.includes(':') && !line.startsWith('http')) {
-      const keyMatch = line.match(/([a-f0-9]{32}):([a-f0-9]{32})/i);
-      if (keyMatch) {
-        currentKeys = {};
-        // keyMatch[1] = Key ID murni, keyMatch[2] = Key murni
-        currentKeys[keyMatch[1].toLowerCase()] = keyMatch[2].toLowerCase();
-      }
+    // 2. PARSER CLEARKEY STRICT (Hanya tangkap [32 hex]:[32 hex])
+    // Ini mengabaikan URL, mengabaikan spasi, mengabaikan tag M3U
+    const keyMatch = line.match(/\b([a-f0-9]{32}):([a-f0-9]{32})\b/i);
+    if (keyMatch) {
+      currentKeys = {};
+      const keyId = keyMatch[1].toLowerCase();
+      const keyValue = keyMatch[2].toLowerCase();
+      currentKeys[keyId] = keyValue;
     }
 
     // 3. Ambil URL Stream MPD / M3U8
