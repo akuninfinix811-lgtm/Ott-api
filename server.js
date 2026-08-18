@@ -22,17 +22,20 @@ function parseM3U(m3uContent) {
       if (nameMatch) currentName = nameMatch[1].trim();
     } 
 
-    // 2. PARSER CLEARKEY STRICT (Hanya tangkap [32 hex]:[32 hex])
-    // Ini mengabaikan URL, mengabaikan spasi, mengabaikan tag M3U
-    const keyMatch = line.match(/\b([a-f0-9]{32}):([a-f0-9]{32})\b/i);
-    if (keyMatch) {
-      currentKeys = {};
-      const keyId = keyMatch[1].toLowerCase();
-      const keyValue = keyMatch[2].toLowerCase();
-      currentKeys[keyId] = keyValue;
+    // 2. PARSER CLEARKEY (Hapus semua URL/Teks pengganggu, cuma ambil kode Hex 32)
+    if (line.includes(':') && !line.startsWith('http://') && !line.startsWith('https://')) {
+      // Cari semua string hex 32 karakter di baris tersebut
+      const hexMatches = line.match(/[a-f0-9]{32}/gi);
+      
+      // Kalau ketemu minimal 2 pasang hex 32 karakter (KID & Key)
+      if (hexMatches && hexMatches.length >= 2) {
+        currentKeys = {};
+        // Tangkap pasangannya: hex[0] = KID, hex[1] = KEY
+        currentKeys[hexMatches[0].toLowerCase()] = hexMatches[1].toLowerCase();
+      }
     }
 
-    // 3. Ambil URL Stream MPD / M3U8
+    // 3. Ambil Stream URL
     if (line.startsWith('http://') || line.startsWith('https://')) {
       if (currentName) {
         channels.push({
