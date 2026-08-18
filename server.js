@@ -22,15 +22,12 @@ function parseM3U(m3uContent) {
       if (nameMatch) currentName = nameMatch[1].trim();
     } 
 
-    // 2. PARSER CLEARKEY (Hapus semua URL/Teks pengganggu, cuma ambil kode Hex 32)
-    if (line.includes(':') && !line.startsWith('http://') && !line.startsWith('https://')) {
-      // Cari semua string hex 32 karakter di baris tersebut
+    // 2. PARSER CLEARKEY JOS (Hanya ambil jika ada kata clearkey / key / kodex / drm)
+    if (line.toLowerCase().includes('clearkey') || line.toLowerCase().includes('kodex') || line.toLowerCase().includes('key')) {
       const hexMatches = line.match(/[a-f0-9]{32}/gi);
-      
-      // Kalau ketemu minimal 2 pasang hex 32 karakter (KID & Key)
       if (hexMatches && hexMatches.length >= 2) {
         currentKeys = {};
-        // Tangkap pasangannya: hex[0] = KID, hex[1] = KEY
+        // hexMatches[0] = KID murni, hexMatches[1] = Key murni
         currentKeys[hexMatches[0].toLowerCase()] = hexMatches[1].toLowerCase();
       }
     }
