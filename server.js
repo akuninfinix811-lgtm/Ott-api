@@ -1,51 +1,62 @@
 const express = require('express');
-const axios = require('axios');
-const iptvParser = require('iptv-playlist-parser');
 const cors = require('cors');
+const axios = require('axios');
 
 const app = express();
 app.use(cors());
 
-const PLAYLIST_URL = 'https://bit.ly/4hxA9xQ';
+// Daftar Channel TV
+const channels = [
+  {
+    id: '1',
+    name: 'SCTV HD',
+    streamUrl: 'https://live.video.id/sctv.m3u8'
+  },
+  {
+    id: '2',
+    name: 'Indosiar HD',
+    streamUrl: 'https://live.video.id/indosiar.m3u8'
+  },
+  {
+    id: '3',
+    name: 'Trans TV',
+    streamUrl: 'https://live.video.id/transtv.m3u8'
+  },
+  {
+    id: '4',
+    name: 'Trans 7',
+    streamUrl: 'https://live.video.id/trans7.m3u8'
+  }
+];
 
-app.get('/api/channels', async (req, res) => {
-    try {
-        const response = await axios.get(PLAYLIST_URL, {
-            headers: { 'User-Agent': 'Mozilla/5.0' }
-        });
-        const parsed = iptvParser.parse(response.data);
-        const channels = parsed.items.map((item, index) => ({
-            id: index + 1,
-            name: item.name,
-            logo: item.tvg.logo || '',
-            streamUrl: item.url
-        }));
-        res.json({ status: 'success', data: channels });
-    } catch (err) {
-        res.status(500).json({ status: 'error', message: 'Gagal muat playlist' });
-    }
+// Endpoint ambil daftar channel
+app.get('/api/channels', (req, res) => {
+  res.json({
+    status: 'success',
+    data: channels
+  });
 });
 
+// Endpoint Proxy Video Stream (Bypass CORS)
 app.get('/api/proxy', async (req, res) => {
-    const videoUrl = req.query.url;
-    if (!videoUrl) return res.status(400).send('URL dibutuhkan');
+  const targetUrl = req.query.url;
+  if (!targetUrl) return res.status(400).send('URL required');
 
-    try {
-        const stream = await axios({
-            method: 'get',
-            url: videoUrl,
-            responseType: 'stream',
-            headers: {
-                'User-Agent': 'IPTVSmarters/1.0.0',
-                'Referer': videoUrl
-            }
-        });
-        res.set('Content-Type', stream.headers['content-type'] || 'application/x-mpegURL');
-        stream.data.pipe(res);
-    } catch (err) {
-        res.status(500).send('Stream error');
-    }
+  try {
+    const response = await axios.get(targetUrl, {
+      responseType: 'stream',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+        'Referer': targetUrl
+      },
+      timeout: 8000
+    });
+
+    res.set(response.headers);
+    response.data.pipe(res);
+  } catch (error) {
+    res.status(500).send('Error streaming media');
+  }
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server aktif di port ${PORT}`));
+module.exports = app;
