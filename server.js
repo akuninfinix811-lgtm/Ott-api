@@ -21,16 +21,19 @@ function parseM3U(m3uContent) {
       if (nameMatch) currentName = nameMatch[1].trim();
     } 
 
+    // OLAHKAN CLEARKEY DRM SECARA AMAN
     if (line.includes(':') && !line.startsWith('http://') && !line.startsWith('https://')) {
-      const cleanLine = line.replace(/https?:\/\/[^\s:]+/gi, '');
-      const hexMatches = cleanLine.match(/[a-f0-9]{32}/gi);
+      // Ambil hanya 32 karakter HEX murni tanpa merusak string lain
+      const hexMatches = line.match(/[a-f0-9]{32}/gi);
       
       if (hexMatches && hexMatches.length >= 2) {
         currentKeys = {};
+        // Ambil hex pertama sebagai KID, hex kedua sebagai Key
         currentKeys[hexMatches[0].toLowerCase()] = hexMatches[1].toLowerCase();
       }
     }
 
+    // TANGKAP STREAM URL MURNI (Gak bakal terpengaruh DRM)
     if (line.startsWith('http://') || line.startsWith('https://')) {
       if (currentName) {
         channels.push({
