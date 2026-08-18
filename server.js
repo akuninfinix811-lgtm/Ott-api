@@ -16,23 +16,24 @@ function parseM3U(m3uContent) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
-    // 1. Ambil Nama Channel
     if (line.startsWith('#EXTINF:')) {
       const nameMatch = line.match(/,(.+)$/);
       if (nameMatch) currentName = nameMatch[1].trim();
     } 
 
-    // 2. PARSER CLEARKEY JOS (Hanya ambil jika ada kata clearkey / key / kodex / drm)
-    if (line.toLowerCase().includes('clearkey') || line.toLowerCase().includes('kodex') || line.toLowerCase().includes('key')) {
-      const hexMatches = line.match(/[a-f0-9]{32}/gi);
+    // PARSER PAKSA CLEAN: Hapus semua URL & protokol, hanya ambil string HEX murni
+    if (line.includes(':') && !line.startsWith('http://') && !line.startsWith('https://')) {
+      // Hapus URL jika ada yang nempel di dalam baris key
+      const cleanLine = line.replace(/https?:\/\/[^\s:]+/gi, '');
+      const hexMatches = cleanLine.match(/[a-f0-9]{32}/gi);
+      
       if (hexMatches && hexMatches.length >= 2) {
         currentKeys = {};
-        // hexMatches[0] = KID murni, hexMatches[1] = Key murni
+        // Tangkap KID dan Key murni
         currentKeys[hexMatches[0].toLowerCase()] = hexMatches[1].toLowerCase();
       }
     }
 
-    // 3. Ambil Stream URL
     if (line.startsWith('http://') || line.startsWith('https://')) {
       if (currentName) {
         channels.push({
