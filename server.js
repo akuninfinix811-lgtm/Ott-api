@@ -16,23 +16,21 @@ function parseM3U(m3uContent) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
-    // 1. Ambil Nama Channel
+    // 1. Tangkap Nama Channel
     if (line.startsWith('#EXTINF:')) {
       const nameMatch = line.match(/,(.+)$/);
       if (nameMatch) currentName = nameMatch[1].trim();
     } 
-    
-    // 2. PARSER KEY SUPER LENGKAP (Cari semua bentuk KID:KEY 32-hex)
-    // Menangkap: clearkey="KID:KEY", #KODEX:KID:KEY, atau KID:KEY biasa
-    if (line.includes(':') && !line.startsWith('http')) {
-      const keyMatch = line.match(/([a-f0-9]{32}):([a-f0-9]{32})/i);
-      if (keyMatch) {
-        currentKeys = {};
-        currentKeys[keyMatch[1].toLowerCase()] = keyMatch[2].toLowerCase();
-      }
+
+    // 2. Tangkap ClearKey murni (HANYA MENGAMBIL 32 HEX : 32 HEX)
+    const keyMatch = line.match(/([a-f0-9]{32}):([a-f0-9]{32})/i);
+    if (keyMatch) {
+      currentKeys = {};
+      // keyMatch[1] = Key ID, keyMatch[2] = Key Value
+      currentKeys[keyMatch[1].toLowerCase()] = keyMatch[2].toLowerCase();
     }
 
-    // 3. Ambil Stream URL
+    // 3. Tangkap URL Stream
     if (line.startsWith('http://') || line.startsWith('https://')) {
       if (currentName) {
         channels.push({
@@ -58,7 +56,7 @@ app.get('/api/channels', async (req, res) => {
     const channels = parseM3U(response.data);
     res.json({ status: 'success', total: channels.length, data: channels });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Gagal baca playlist' });
+    res.status(500).json({ status: 'error' });
   }
 });
 
