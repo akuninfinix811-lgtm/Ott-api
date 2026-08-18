@@ -16,21 +16,23 @@ function parseM3U(m3uContent) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
 
-    // 1. Tangkap Nama Channel
+    // 1. Ambil Nama Channel
     if (line.startsWith('#EXTINF:')) {
       const nameMatch = line.match(/,(.+)$/);
       if (nameMatch) currentName = nameMatch[1].trim();
     } 
 
-    // 2. Tangkap ClearKey murni (HANYA MENGAMBIL 32 HEX : 32 HEX)
-    const keyMatch = line.match(/([a-f0-9]{32}):([a-f0-9]{32})/i);
-    if (keyMatch) {
-      currentKeys = {};
-      // keyMatch[1] = Key ID, keyMatch[2] = Key Value
-      currentKeys[keyMatch[1].toLowerCase()] = keyMatch[2].toLowerCase();
+    // 2. Ambil ClearKey (Hanya mencari pasangan 32-hex : 32-hex)
+    if (line.includes(':') && !line.startsWith('http')) {
+      const keyMatch = line.match(/([a-f0-9]{32}):([a-f0-9]{32})/i);
+      if (keyMatch) {
+        currentKeys = {};
+        // keyMatch[1] = Key ID murni, keyMatch[2] = Key murni
+        currentKeys[keyMatch[1].toLowerCase()] = keyMatch[2].toLowerCase();
+      }
     }
 
-    // 3. Tangkap URL Stream
+    // 3. Ambil URL Stream MPD / M3U8
     if (line.startsWith('http://') || line.startsWith('https://')) {
       if (currentName) {
         channels.push({
