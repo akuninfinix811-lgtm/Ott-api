@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'kunci_rahasia_bebas_diubah';
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   const { token } = req.query;
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
@@ -10,12 +10,12 @@ export default async function handler(req, res) {
     try {
       jwt.verify(token, JWT_SECRET);
     } catch (err) {
-      return res.status(403).send('Akses Ditolak: Token M3U Tidak Valid / Kedaluwarsa');
+      return res.status(403).send('Akses Ditolak: Token M3U Tidak Valid');
     }
   }
 
-  // Ganti dengan URL M3U Asli Anda
-  const ORIGINAL_M3U_URL = 'https://sabutv.com/server/event.m3u8?ch=960&proxy=1';
+  // GANTI LINK DI BAWAL INI DENGAN LINK M3U ASLI ANDA
+  const ORIGINAL_M3U_URL = 'https://sabutv.com/server/event.m3u8?ch=2&proxy=1';
   
   try {
     const response = await fetch(ORIGINAL_M3U_URL);
@@ -38,4 +38,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).send('Gagal mengambil playlist M3U');
   }
-}
+};
