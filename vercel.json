@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/playlist", "destination": "/api/playlist.js" },
+    { "source": "/api/segment", "destination": "/api/segment.js" }
+  ]
+}
