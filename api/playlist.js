@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
 
   // Ganti dengan URL M3U Asli Anda
-  const ORIGINAL_M3U_URL = 'https://sumber-m3u-asli.com/stream.m3u8';
+  const ORIGINAL_M3U_URL = 'https://sabutv.com/server/event.m3u8?ch=960&proxy=1';
   
   try {
     const response = await fetch(ORIGINAL_M3U_URL);
