@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'kunci_rahasia_bebas_diubah';
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   const { url, token } = req.query;
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
       return res.status(403).send('Akses Ditolak: IP Tidak Sesuai');
     }
   } catch (err) {
-    return res.status(403).send('Akses Ditolak: Token Kadaluwarsa/Salah');
+    return res.status(403).send('Akses Ditolak: Token Kadaluwarsa');
   }
 
   try {
@@ -29,4 +29,4 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).send('Gagal mengambil segmen video');
   }
-}
+};
