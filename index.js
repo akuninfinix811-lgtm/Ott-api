@@ -26,7 +26,7 @@ module.exports = async (req, res) => {
   }
 
   // Mode 2: Mengambil Playlist M3U (Default Route)
-  const ORIGINAL_M3U_URL = 'https://sumber-m3u-asli.com/stream.m3u8'; // GANTI LINK M3U ASLI DI SINI
+  const ORIGINAL_M3U_URL = 'https://sabutv.com/server/event.m3u8?ch=2&proxy=1'; // GANTI LINK M3U ASLI DI SINI
   
   try {
     const response = await fetch(ORIGINAL_M3U_URL);
